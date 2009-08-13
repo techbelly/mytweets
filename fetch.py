@@ -27,7 +27,6 @@ try:
     if '-u' not in sys.argv or '-p' not in sys.argv:
         from config import USERNAME, PASSWORD
     else:
-        print sys.argv
         USERNAME=sys.argv[sys.argv.index('-u')+1]
         PASSWORD=sys.argv[sys.argv.index('-p')+1]
 except ImportError:
@@ -59,7 +58,11 @@ def fetch_and_save_new_tweets():
         since_id = max(t['id'] for t in tweets)
     else:
         since_id = None
-    new_tweets = fetch_all(since_id)
+    try:
+        new_tweets = fetch_all(since_id)
+    except ValueError:
+        print "An error occurred while getting your tweets. Check your that your username and password are correct."
+        sys.exit()
     num_new_saved = 0
     for tweet in new_tweets:
         if tweet['id'] not in old_tweet_ids:
