@@ -1,2 +1,5 @@
 *.json
+*.xml
+*.pyc
+*.txt
 config.py
