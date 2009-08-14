@@ -1,4 +1,4 @@
-import warnings, httplib2, urllib, time, sys
+import warnings, urllib, time, sys
 warnings.simplefilter('ignore', DeprecationWarning)
 
 try:
@@ -42,10 +42,8 @@ else:
     def write_all(tweets):
         json.dump(tweets, open(FILE, 'w'), indent = 2)
 
-USER_TIMELINE = "http://twitter.com/statuses/user_timeline.json"
-
-h = httplib2.Http()
-h.add_credentials(USERNAME, PASSWORD, 'twitter.com')
+USER_TIMELINE = "http://%s:%s@twitter.com/statuses/user_timeline.json" % (
+    urllib.quote(USERNAME), urllib.quote(PASSWORD))
 
 def fetch_and_save_new_tweets():
     tweets=load_all()
@@ -85,9 +83,7 @@ def fetch_all(since_id = None):
     
     while True:
         args['page'] = page
-        headers, body = h.request(
-            USER_TIMELINE + '?' + urllib.urlencode(args), method='GET'
-        )
+        body = urllib.urlopen("%s?%s" % (USER_TIMELINE, urllib.urlencode(args))).read()
         page += 1
         tweets = json.loads(body)
         if 'error' in tweets:
