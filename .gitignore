@@ -1,5 +1,3 @@
-*.json
-*.xml
+my_tweets.*
 *.pyc
-*.txt
 config.py
