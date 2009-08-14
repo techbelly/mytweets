@@ -113,23 +113,8 @@ def fetch_all(since_id = None):
     return all_tweets
 
 def dict2xml(map, level, xml):
-    if str(type(map)) == "<type 'dict'>":
-        for key, value in map.items():
-            if str(type(value)) == "<type 'dict'>":
-                if(len(e) > 0):
-                    xml += "\t"*level
-                    xml += "<%s>\n" % (key)
-                    xml+=dict2xml(value, level+1, "")
-                    xml += "\t"*level
-                    xml += "</%s>\n" % (key)
-                else:
-                    xml += "\t"*(level)
-                    xml += "<%s></%s>\n" % (key,key)
-            else:
-                xml += "\t"*(level)
-                xml += "<%s>%s</%s>\n" % (key,value, key)
-    else:
-        xml += "\t"*level
+    for key, value in map.items():
+        xml += "\t"*(level)
         xml += "<%s>%s</%s>\n" % (key,value, key)
     return xml
 
