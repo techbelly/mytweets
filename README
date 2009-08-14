@@ -2,7 +2,7 @@ mytweets
 ========
 
 A simple script to back up all of your tweets in to a local file.
-It can save them in JSON, XML, or plain text.
+It can save them in JSON, XML, or in Python's pickle format
 
 Dependencies:
 
@@ -24,8 +24,8 @@ PASSWORD = 'your-twitter-password'
 python fetch.py [-u your-twitter-username] [-p your-twitter-password] [-x] [-t]
 
 3. If you use the -x option, your tweets will be saved to my_tweets.xml.
-   The -t option will save your tweets to my_tweets.txt.  Otherwise your
-   tweets will be saved to my_tweets.json.
+   The -t option will save your tweets to my_tweets.txt.  Your tweets
+   will always be saved to my_tweets.json.
 
 You can run the command again any time to save new tweets created since you 
 last ran the script.

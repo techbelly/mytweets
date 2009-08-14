@@ -22,6 +22,7 @@ if '-x' in sys.argv:
 elif '-t' in sys.argv:
     FILE = "my_tweets.txt"
     TYPE = "text"
+    import pickle
 else:
     FILE = "my_tweets.json"
     TYPE = "json"
@@ -60,7 +61,11 @@ def fetch_and_save_new_tweets():
         if 'user' in t:
             del t['user']
     # Save back to disk
-    json.dump(tweets, open(FILE, 'w'), indent = 2)
+    #json.dump(tweets, open(FILE, 'w'), indent = 2)
+    if TYPE == "xml":
+        pass
+    elif TYPE == "text":
+        pickle.dump(tweets, open(FILE, 'w'))
     print "Saved %s new tweets" % num_new_saved
 
 def fetch_all(since_id = None):
