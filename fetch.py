@@ -2,6 +2,11 @@ import warnings, httplib2, urllib, time, sys
 warnings.simplefilter('ignore', DeprecationWarning)
 
 try:
+    import json
+except ImportError:
+    import simplejson as json
+
+try:
     if '-u' not in sys.argv or '-p' not in sys.argv:
         from config import USERNAME, PASSWORD
     else:
@@ -11,21 +16,16 @@ except ImportError:
     print "Username and password not specified. Create a config.py file or use the -u and -p command line options"
     sys.exit()
 
-if '-x' in sys.argv:
+if '-x' in sys.argv and '-t' not in sys.argv:
     FILE = "my_tweets.xml"
     TYPE = "xml"
-elif '-t' in sys.argv:
+elif '-t' in sys.argv and '-x' not in sys.argv:
     FILE = "my_tweets.txt"
     TYPE = "text"
     import pickle
 else:
     FILE = "my_tweets.json"
     TYPE = "json"
-    try:
-        import json
-    except ImportError:
-        import simplejson as json
-
 USER_TIMELINE = "http://twitter.com/statuses/user_timeline.json"
 
 h = httplib2.Http()
