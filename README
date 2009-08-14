@@ -6,7 +6,6 @@ It can save them in JSON, XML, or in Python's pickle format
 
 Dependencies:
 
-- httplib2 from http://code.google.com/p/httplib2/
 - simplejson (unless Python 2.6) from http://pypi.python.org/pypi/simplejson/
 
 Usage:
