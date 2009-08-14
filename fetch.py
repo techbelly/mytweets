@@ -32,14 +32,25 @@ USER_TIMELINE = "http://twitter.com/statuses/user_timeline.json"
 h = httplib2.Http()
 h.add_credentials(USERNAME, PASSWORD, 'twitter.com')
 
-def load_all():
+def load_all_json():
     try:
         return json.load(open(FILE))
     except IOError:
         return []
 
+def load_all_pickle():
+    try:
+        return pickle.load(open(FILE))
+    except IOError:
+        return []
+
 def fetch_and_save_new_tweets():
-    tweets = load_all()
+    if TYPE == "xml":
+        pass
+    elif TYPE == "text":
+        tweets=load_all_pickle()
+    else:
+         tweets=load_all_json()
     old_tweet_ids = set(t['id'] for t in tweets)
     if tweets:
         since_id = max(t['id'] for t in tweets)
@@ -61,11 +72,12 @@ def fetch_and_save_new_tweets():
         if 'user' in t:
             del t['user']
     # Save back to disk
-    #json.dump(tweets, open(FILE, 'w'), indent = 2)
     if TYPE == "xml":
         pass
     elif TYPE == "text":
         pickle.dump(tweets, open(FILE, 'w'))
+    else:
+        json.dump(tweets, open(FILE, 'w'), indent = 2)
     print "Saved %s new tweets" % num_new_saved
 
 def fetch_all(since_id = None):
