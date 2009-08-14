@@ -35,7 +35,7 @@ if '-x' in sys.argv and '-t' not in sys.argv:
                         continue
                     a.append(l)
                     l=f.readline()
-                tweets.append(xml2dict(a))
+                tweets.append(xml_to_dict(a))
             line = f.readline()
         return tweets
 
@@ -44,10 +44,34 @@ if '-x' in sys.argv and '-t' not in sys.argv:
         xml="<tweets>\n"
         for d in tweets:
             xml+="\t<tweet>\n"
-            xml+=dict2xml(d,2,"")
+            xml+=dict_to_xml(d,2,"")
             xml+="\t</tweet>\n"
         xml+="</tweets>\n"
         open(FILE, 'w').write(xml)
+
+    def dict_to_xml(map, level, xml):
+        for key, value in map.items():
+            xml += "\t"*(level)
+            xml += "<%s>%s</%s>\n" % (key,value, key)
+        return xml
+
+    def xml_to_dict(lines):
+        out={}
+        for l in lines:
+            l.strip()
+            key=l[l.index('<')+1:l.index('>')]
+            value=l[l.index('>')+1:l.rindex('<')]
+            if value.isdigit():
+                value=int(value)
+            elif value == "None":
+                value=None
+            elif value == "False":
+                value=False
+            elif value == "True":
+                value=True
+            out[key]=value
+        return out
+    
 elif '-t' in sys.argv and '-x' not in sys.argv:
     FILE = "my_tweets.txt"
     import pickle
@@ -97,7 +121,6 @@ def fetch_and_save_new_tweets():
     for t in tweets:
         if 'user' in t:
             del t['user']
-    # Save back to disk
     write_all(tweets)
     print "Saved %s new tweets" % num_new_saved
 
@@ -124,35 +147,13 @@ def fetch_all(since_id = None):
             if tweet['id'] not in seen_ids:
                 seen_ids.add(tweet['id'])
                 all_tweets.append(tweet)
-        #print "Fetched another %s" % (len(all_tweets) - all_tweets_len)
         all_tweets_len = len(all_tweets)
         time.sleep(2)
     
     all_tweets.sort(key = lambda t: t['id'], reverse=True)
     return all_tweets
 
-def dict2xml(map, level, xml):
-    for key, value in map.items():
-        xml += "\t"*(level)
-        xml += "<%s>%s</%s>\n" % (key,value, key)
-    return xml
 
-def xml2dict(lines):
-    out={}
-    for l in lines:
-        l.strip()
-        key=l[l.index('<')+1:l.index('>')]
-        value=l[l.index('>')+1:l.rindex('<')]
-        if value.isdigit():
-            value=int(value)
-        elif value == "None":
-            value=None
-        elif value == "False":
-            value=False
-        elif value == "True":
-            value=True
-        out[key]=value
-    return out
 
 if __name__ == '__main__':
     fetch_and_save_new_tweets()
