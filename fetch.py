@@ -1,11 +1,6 @@
-import warnings
+import warnings, httplib2, urllib, time, sys
 warnings.simplefilter('ignore', DeprecationWarning)
 
-import httplib2, urllib, time, sys
-try:
-    import json
-except ImportError:
-    import simplejson as json
 try:
     if '-u' not in sys.argv or '-p' not in sys.argv:
         from config import USERNAME, PASSWORD
@@ -26,6 +21,10 @@ elif '-t' in sys.argv:
 else:
     FILE = "my_tweets.json"
     TYPE = "json"
+    try:
+        import json
+    except ImportError:
+        import simplejson as json
 
 USER_TIMELINE = "http://twitter.com/statuses/user_timeline.json"
 
