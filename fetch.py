@@ -21,21 +21,24 @@ if '-x' in sys.argv and '-t' not in sys.argv:
     def load_all():
         try:
             f=open(FILE)
-            f.readline()
-            line=f.readline()
-            tweets=[]
-            while line:
-                if "<tweet>" in line:
-                    a=[]
-                    l=f.readline()
-                    while "</tweet>" not in l:
-                        a.append(l)
-                        l=f.readline()
-                    tweets.append(xml2dict(a))
-                line = f.readline()
-            return tweets
         except IOError:
             return []
+        line=f.readline()
+        tweets=[]
+        while line:
+            if "<tweet>" in line:
+                a=[]
+                l=f.readline()
+                while "</tweet>" not in l:
+                    if l.strip()[len(l.strip())-1] != '>':
+                        l+=f.readline()
+                        continue
+                    a.append(l)
+                    l=f.readline()
+                tweets.append(xml2dict(a))
+            line = f.readline()
+        return tweets
+
 
     def write_all(tweets):
         xml="<tweets>\n"
