@@ -1,5 +1,4 @@
-import warnings, urllib, time, sys
-warnings.simplefilter('ignore', DeprecationWarning)
+import urllib, time, sys
 
 try:
     import json
