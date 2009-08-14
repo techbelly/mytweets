@@ -21,7 +21,7 @@ PASSWORD = 'your-twitter-password'
 
 2. Run the command like so:
 
-python fetch.py [-u your-twitter-username] [-p your-twitter-password] [-x] [-t]
+python fetch.py [-u your-twitter-username -p your-twitter-password] [-x|t]
 
 3. If you use the -x option, your tweets will be saved to my_tweets.xml.
    The -t option will save your tweets to my_tweets.txt.  Otherwise your
