@@ -6,50 +6,49 @@ try:
 except ImportError:
     import simplejson as json
 
-try:
-    if '-u' not in sys.argv or '-p' not in sys.argv:
+if '-u' in sys.argv and '-p' in sys.argv:
+    USERNAME=sys.argv[sys.argv.index('-u')+1]
+    PASSWORD=sys.argv[sys.argv.index('-p')+1]
+else:
+    try:
         from config import USERNAME, PASSWORD
-    else:
-        USERNAME=sys.argv[sys.argv.index('-u')+1]
-        PASSWORD=sys.argv[sys.argv.index('-p')+1]
-except ImportError:
-    print "Username and password not specified. Create a config.py file or use the -u and -p command line options"
-    sys.exit()
+    except ImportError:
+        print "Username and password not specified. Create a config.py file or use the -u and -p command line options"
+        sys.exit()
 
 if '-x' in sys.argv and '-t' not in sys.argv:
     FILE = "my_tweets.xml"
-    TYPE = "xml"
 elif '-t' in sys.argv and '-x' not in sys.argv:
     FILE = "my_tweets.txt"
-    TYPE = "text"
     import pickle
+    
+    def load_all():
+        try:
+            return pickle.load(open(FILE))
+        except IOError:
+            return []
+    
+    def write_all(tweets):
+        pickle.dump(tweets, open(FILE, 'w'))
 else:
     FILE = "my_tweets.json"
-    TYPE = "json"
+    
+    def load_all():
+        try:
+            return json.load(open(FILE))
+        except IOError:
+            return []
+    
+    def write_all(tweets):
+        json.dump(tweets, open(FILE, 'w'), indent = 2)
+
 USER_TIMELINE = "http://twitter.com/statuses/user_timeline.json"
 
 h = httplib2.Http()
 h.add_credentials(USERNAME, PASSWORD, 'twitter.com')
 
-def load_all_json():
-    try:
-        return json.load(open(FILE))
-    except IOError:
-        return []
-
-def load_all_pickle():
-    try:
-        return pickle.load(open(FILE))
-    except IOError:
-        return []
-
 def fetch_and_save_new_tweets():
-    if TYPE == "xml":
-        pass
-    elif TYPE == "text":
-        tweets=load_all_pickle()
-    else:
-         tweets=load_all_json()
+    tweets=load_all()
     old_tweet_ids = set(t['id'] for t in tweets)
     if tweets:
         since_id = max(t['id'] for t in tweets)
@@ -71,12 +70,7 @@ def fetch_and_save_new_tweets():
         if 'user' in t:
             del t['user']
     # Save back to disk
-    if TYPE == "xml":
-        pass
-    elif TYPE == "text":
-        pickle.dump(tweets, open(FILE, 'w'))
-    else:
-        json.dump(tweets, open(FILE, 'w'), indent = 2)
+    write_all(tweets)
     print "Saved %s new tweets" % num_new_saved
 
 def fetch_all(since_id = None):
