@@ -19,7 +19,23 @@ if '-x' in sys.argv and '-t' not in sys.argv:
     FILE = "my_tweets.xml"
 
     def load_all():
-        return []
+        try:
+            f=open(FILE)
+            f.readline()
+            line=f.readline()
+            tweets=[]
+            while line:
+                if "<tweet>" in line:
+                    a=[]
+                    l=f.readline()
+                    while "</tweet>" not in l:
+                        a.append(l)
+                        l=f.readline()
+                    tweets.append(xml2dict(a))
+                line = f.readline()
+            return tweets
+        except IOError:
+            return []
 
     def write_all(tweets):
         xml="<tweets>\n"
@@ -117,6 +133,23 @@ def dict2xml(map, level, xml):
         xml += "\t"*(level)
         xml += "<%s>%s</%s>\n" % (key,value, key)
     return xml
+
+def xml2dict(lines):
+    out={}
+    for l in lines:
+        l.strip()
+        key=l[l.index('<')+1:l.index('>')]
+        value=l[l.index('>')+1:l.rindex('<')]
+        if value.isdigit():
+            value=int(value)
+        elif value == "None":
+            value=None
+        elif value == "False":
+            value=False
+        elif value == "True":
+            value=True
+        out[key]=value
+    return out
 
 if __name__ == '__main__':
     fetch_and_save_new_tweets()
