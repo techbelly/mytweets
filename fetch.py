@@ -17,6 +17,18 @@ else:
 
 if '-x' in sys.argv and '-t' not in sys.argv:
     FILE = "my_tweets.xml"
+
+    def load_all():
+        return []
+
+    def write_all(tweets):
+        xml="<tweets>\n"
+        for d in tweets:
+            xml+="\t<tweet>\n"
+            xml+=dict2xml(d,2,"")
+            xml+="\t</tweet>\n"
+        xml+="</tweets>\n"
+        open(FILE, 'w').write(xml)
 elif '-t' in sys.argv and '-x' not in sys.argv:
     FILE = "my_tweets.txt"
     import pickle
@@ -99,6 +111,27 @@ def fetch_all(since_id = None):
     
     all_tweets.sort(key = lambda t: t['id'], reverse=True)
     return all_tweets
+
+def dict2xml(map, level, xml):
+    if str(type(map)) == "<type 'dict'>":
+        for key, value in map.items():
+            if str(type(value)) == "<type 'dict'>":
+                if(len(e) > 0):
+                    xml += "\t"*level
+                    xml += "<%s>\n" % (key)
+                    xml+=dict2xml(value, level+1, "")
+                    xml += "\t"*level
+                    xml += "</%s>\n" % (key)
+                else:
+                    xml += "\t"*(level)
+                    xml += "<%s></%s>\n" % (key,key)
+            else:
+                xml += "\t"*(level)
+                xml += "<%s>%s</%s>\n" % (key,value, key)
+    else:
+        xml += "\t"*level
+        xml += "<%s>%s</%s>\n" % (key,value, key)
+    return xml
 
 if __name__ == '__main__':
     fetch_and_save_new_tweets()
