@@ -1,3 +1,7 @@
+"""
+Saves your tweets to a local file
+"""
+
 import urllib, time, sys
 
 try:
@@ -14,65 +18,8 @@ else:
     except ImportError:
         print "Username and password not specified. Create a config.py file or use the -u and -p command line options"
         sys.exit()
-
-if '-x' in sys.argv and '-t' not in sys.argv:
-    FILE = "my_tweets.xml"
-
-    def load_all():
-        try:
-            f=open(FILE)
-        except IOError:
-            return []
-        line=f.readline()
-        tweets=[]
-        while line:
-            if "<tweet>" in line:
-                a=[]
-                l=f.readline()
-                while "</tweet>" not in l:
-                    if l.strip()[len(l.strip())-1] != '>':
-                        l+=f.readline()
-                        continue
-                    a.append(l)
-                    l=f.readline()
-                tweets.append(xml_to_dict(a))
-            line = f.readline()
-        return tweets
-
-
-    def write_all(tweets):
-        xml="<tweets>\n"
-        for d in tweets:
-            xml+="\t<tweet>\n"
-            xml+=dict_to_xml(d,2,"")
-            xml+="\t</tweet>\n"
-        xml+="</tweets>\n"
-        open(FILE, 'w').write(xml)
-
-    def dict_to_xml(map, level, xml):
-        for key, value in map.items():
-            xml += "\t"*(level)
-            xml += "<%s>%s</%s>\n" % (key,value, key)
-        return xml
-
-    def xml_to_dict(lines):
-        out={}
-        for l in lines:
-            l.strip()
-            key=l[l.index('<')+1:l.index('>')]
-            value=l[l.index('>')+1:l.rindex('<')]
-            if value.isdigit():
-                value=int(value)
-            elif value == "None":
-                value=None
-            elif value == "False":
-                value=False
-            elif value == "True":
-                value=True
-            out[key]=value
-        return out
-    
-elif '-t' in sys.argv and '-x' not in sys.argv:
+         
+if '-t' in sys.argv:
     FILE = "my_tweets.txt"
     import pickle
     
