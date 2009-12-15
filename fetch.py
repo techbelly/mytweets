@@ -1,3 +1,4 @@
+#! /usr/bin/env python
 """
 Saves your tweets to a local file
 """
@@ -17,7 +18,7 @@ else:
         from config import USERNAME, PASSWORD
     except ImportError:
         print "Username and password not specified. Create a config.py file or use the -u and -p command line options"
-        sys.exit()
+        sys.exit(1)
          
 if '-t' in sys.argv:
     FILE = "my_tweets.txt"
@@ -57,7 +58,7 @@ def fetch_and_save_new_tweets():
         new_tweets = fetch_all(since_id)
     except ValueError:
         print "An error occurred while getting your tweets. Check your that your username and password are correct."
-        sys.exit()
+        sys.exit(1)
     num_new_saved = 0
     for tweet in new_tweets:
         if tweet['id'] not in old_tweet_ids:
