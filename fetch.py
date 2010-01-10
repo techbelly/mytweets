@@ -7,10 +7,10 @@ try:
 except ImportError:
     import simplejson as json
 
-from config import USERNAME, PASSWORD
+from config import USERNAME, PASSWORD, FILE_PATH
 
 USER_TIMELINE = "http://twitter.com/statuses/user_timeline.json"
-FILE = "my_tweets.json"
+FILE = FILE_PATH + "my_tweets.json"
 
 h = httplib2.Http()
 h.add_credentials(USERNAME, PASSWORD, 'twitter.com')
