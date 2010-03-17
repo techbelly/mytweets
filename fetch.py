@@ -1,7 +1,6 @@
-import warnings
+import warnings, urllib, time, sys
 warnings.simplefilter('ignore', DeprecationWarning)
 
-import httplib2, urllib, time
 try:
     import json
 except ImportError:
@@ -9,11 +8,8 @@ except ImportError:
 
 from config import USERNAME, PASSWORD
 
-USER_TIMELINE = "http://twitter.com/statuses/user_timeline.json"
-FILE = "my_tweets.json"
-
-h = httplib2.Http()
-h.add_credentials(USERNAME, PASSWORD, 'twitter.com')
+USER_TIMELINE = "http://%s:%s@twitter.com/statuses/user_timeline.json" % (
+    urllib.quote(USERNAME), urllib.quote(PASSWORD))
 
 def load_all():
     try:
@@ -55,9 +51,7 @@ def fetch_all(since_id = None):
     
     while True:
         args['page'] = page
-        headers, body = h.request(
-            USER_TIMELINE + '?' + urllib.urlencode(args), method='GET'
-        )
+        body = urllib.urlopen("%s?%s" % (USER_TIMELINE, urllib.urlencode(args))).read()
         page += 1
         tweets = json.loads(body)
         if 'error' in tweets:
