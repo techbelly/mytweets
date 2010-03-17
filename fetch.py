@@ -8,6 +8,7 @@ except ImportError:
 
 from config import USERNAME, PASSWORD
 
+FILE = "my_tweets.json"
 USER_TIMELINE = "http://%s:%s@twitter.com/statuses/user_timeline.json" % (
     urllib.quote(USERNAME), urllib.quote(PASSWORD))
 
