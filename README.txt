@@ -5,7 +5,6 @@ A simple script to back up all of your tweets in to a local JSON file.
 
 Dependencies:
 
-- httplib2 from http://code.google.com/p/httplib2/
 - simplejson (unless Python 2.6) from http://pypi.python.org/pypi/simplejson/
 
 Usage:
