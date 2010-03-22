@@ -1,0 +1,35 @@
+mytweets
+Forked by Andrew Johnson
+ajj9@case.edu
+
+This is a fork of simonw's original mytweets script: 
+http://github.com/simonw/mytweets/tree/master
+
+mytweets is a script to back up all your tweets to a local file.
+It can save them in JSON or Python's pickle format.
+
+Directions:
+1) Put fetch.py in any directory
+2) Run 'chmod +x fetch.py'
+
+Notes:
+1) mytweets requires simplejson (unless Python 2.6) from http://pypi.python.org/pypi/simplejson/
+
+Usage
+1) To specify your username and passowrd, you can either
+   create a file called config.py in the same directory as the script:
+
+    USERNAME = 'your-twitter-username'
+    PASSWORD = 'your-twitter-password'
+
+   or use the -u and -p options on the command line.
+
+2) Run the command like so:
+
+   ./fetch.py [-u your-twitter-username -p your-twitter-password] [-t]
+
+3) The -t option will save your tweets to my_tweets.txt (pickle format).
+   Otherwise your tweets will be saved to my_tweets.json.
+   
+4) Run the command again at any time to save any tweets created since
+   you last ran the script.

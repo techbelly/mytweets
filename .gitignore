@@ -1,2 +1,3 @@
-*.json
+my_tweets.*
+*.pyc
 config.py
