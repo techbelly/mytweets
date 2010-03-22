@@ -18,10 +18,10 @@ USER_TIMELINE = "http://%s:%s@twitter.com/statuses/user_timeline.json" % (
     urllib.quote(USERNAME), urllib.quote(PASSWORD))
 
 def load_all():
-if '-u' in sys.argv and '-p' in sys.argv:
+  if '-u' in sys.argv and '-p' in sys.argv:
     USERNAME=sys.argv[sys.argv.index('-u')+1]
     PASSWORD=sys.argv[sys.argv.index('-p')+1]
-else:
+  else:
     try:
         from config import USERNAME, PASSWORD
     except ImportError:
