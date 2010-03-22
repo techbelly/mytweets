@@ -8,9 +8,9 @@ try:
 except ImportError:
     import simplejson as json
 
-from config import USERNAME, PASSWORD
+from config import USERNAME, PASSWORD, FILE_PATH
 
-FILE = "my_tweets.json"
+FILE = FILE_PATH + "my_tweets.json"
 USER_TIMELINE = "http://%s:%s@twitter.com/statuses/user_timeline.json" % (
     urllib.quote(USERNAME), urllib.quote(PASSWORD))
 
