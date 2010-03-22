@@ -65,40 +65,40 @@ def normalize_url(url):
 
     return url
 
-def lookup_short_urls(tweet):
-    # If short_urls are already there, skip
-    if 'short_urls' in tweet: return
-
-    # (Start of line or word)
-    # (Maybe something like http://)
-    # (A vaguely domain-like section, at least one dot which is not a double dot)
-    # (Whatever else follows, liberally via non-whitespace)
-    url_regex = '(\A|\\b)([\w-]+://)?\S+[.][^\s.]\S*'
-
-    redir = httplib2.Http(timeout=10)
-    redir.follow_redirects = False
-    redir.force_exception_to_status_code = True
-
-    short_urls = {}
-
-    new_text = tweet['text']
-    for sub in tweet['text'].split():
-        orig_url_match = re.search(url_regex, sub)
-        if not orig_url_match:
-            continue
-        orig_url = normalize_url(orig_url_match.group(0))
-        if not orig_url: continue
-
-        try:
-            response = redir.request(orig_url)[0]
-            if 'status' in response and response['status'] == '301':
-                short_urls[response['location']] = orig_url
-                new_text = new_text.replace(orig_url, response['location'])
-        except:
-            pass
-
-    tweet['short_urls'] = short_urls
-    tweet['text'] = new_text
+# def lookup_short_urls(tweet):
+#     # If short_urls are already there, skip
+#     if 'short_urls' in tweet: return
+# 
+#     # (Start of line or word)
+#     # (Maybe something like http://)
+#     # (A vaguely domain-like section, at least one dot which is not a double dot)
+#     # (Whatever else follows, liberally via non-whitespace)
+#     url_regex = '(\A|\\b)([\w-]+://)?\S+[.][^\s.]\S*'
+# 
+#     redir = httplib2.Http(timeout=10)
+#     redir.follow_redirects = False
+#     redir.force_exception_to_status_code = True
+# 
+#     short_urls = {}
+# 
+#     new_text = tweet['text']
+#     for sub in tweet['text'].split():
+#         orig_url_match = re.search(url_regex, sub)
+#         if not orig_url_match:
+#             continue
+#         orig_url = normalize_url(orig_url_match.group(0))
+#         if not orig_url: continue
+# 
+#         try:
+#             response = redir.request(orig_url)[0]
+#             if 'status' in response and response['status'] == '301':
+#                 short_urls[response['location']] = orig_url
+#                 new_text = new_text.replace(orig_url, response['location'])
+#         except:
+#             pass
+# 
+#     tweet['short_urls'] = short_urls
+#     tweet['text'] = new_text
 
 def fetch_and_save_new_tweets():
     tweets=load_all()
@@ -122,7 +122,7 @@ def fetch_and_save_new_tweets():
     for t in tweets:
         if 'user' in t:
             del t['user']
-        lookup_short_urls(t)
+        # lookup_short_urls(t)
     # Save back to disk
     write_all(tweets)
     print "Saved %s new tweets" % num_new_saved
