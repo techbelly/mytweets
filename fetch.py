@@ -1,18 +1,21 @@
 import warnings, urllib, time, sys
 warnings.simplefilter('ignore', DeprecationWarning)
+"""
+Saves your tweets to a local file
+"""
 
 try:
     import json
 except ImportError:
     import simplejson as json
 
-from config import USERNAME, PASSWORD
+from config import USERNAME, PASSWORD, FILE_PATH
 
-FILE = "my_tweets.json"
+FILE = FILE_PATH + "my_tweets.json"
 USER_TIMELINE = "http://%s:%s@api.twitter.com/1/statuses/user_timeline.json" % (
     urllib.quote(USERNAME), urllib.quote(PASSWORD))
 
-FAVS = "my_faves.json"
+FAVS = FILE_PATH + "my_faves.json"
 FAVOURITES = "http://%s:%s@api.twitter.com/1/favorites.json" % (
     urllib.quote(USERNAME), urllib.quote(PASSWORD))
 
