@@ -13,6 +13,19 @@ except ImportError:
     import simplejson as json
 
 
+# Valid options for TIMELINE or -m, and the corresponding endpoints at twitter.com/statuses/ and the local filenames we use.
+timelines = {
+    'user': {
+        'remote': 'user_timeline',
+        'local': 'my_tweets'
+    },
+    'friends': {
+        'remote': 'friends_timeline',
+        'local': 'my_friends_tweets'
+    }
+}
+
+
 if '-k' in sys.argv and '-s' in sys.argv and '-o' in sys.argv and '-e' in sys.argv:
     CONSUMER_KEY = sys.argv[sys.argv.index('-k')+1]
     CONSUMER_SECRET = sys.argv[sys.argv.index('-s')+1]
@@ -24,9 +37,27 @@ else:
     except ImportError:
         print "Keys and tokens not specified. Create a config.py file or use the -k, -s, -o and -e command line options"
         sys.exit(1)
-         
+
+
+# Work out whether we're doing user_timeline or friends_timeline.
+TIMELINE = 'user'
+if '-m' in sys.argv:
+    TIMELINE = sys.argv[sys.argv.index('-m')+1]
+else:
+    try:
+        from config import TIMELINE
+    except ImportError:
+        pass
+try:
+    REMOTE_TIMELINE = "http://twitter.com/statuses/%s.json" % timelines[TIMELINE]['remote']
+except KeyError:
+    print "Invalid timeline: ", TIMELINE
+    sys.exit(1)
+FILE = timelines[TIMELINE]['local']
+
+
 if '-t' in sys.argv:
-    FILE = "my_tweets.txt"
+    FILE = "%s.txt" % FILE
     import pickle
     
     def load_all():
@@ -38,7 +69,7 @@ if '-t' in sys.argv:
     def write_all(tweets):
         pickle.dump(tweets, open(FILE, 'w'))
 else:
-    FILE = "my_tweets.json"
+    FILE = "%s.json" % FILE
     
     def load_all():
         try:
@@ -59,8 +90,6 @@ else:
         sys.exit(1)
     
 FILE = FILE_PATH + FILE
-
-USER_TIMELINE = "http://twitter.com/statuses/user_timeline.json"
     
 
 def normalize_url(url):
@@ -152,8 +181,7 @@ def fetch_all(since_id = None):
         consumer = oauth.Consumer(key=CONSUMER_KEY, secret=CONSUMER_SECRET)
         token = oauth.Token(key=ACCESS_TOKEN, secret=ACCESS_TOKEN_SECRET)
         client = oauth.Client(consumer, token)
-
-        resp, content = client.request("%s?%s" % (USER_TIMELINE, urllib.urlencode(args)), 'GET')
+        resp, content = client.request("%s?%s" % (REMOTE_TIMELINE, urllib.urlencode(args)), 'GET')
 
         page += 1
         tweets = json.loads(content)

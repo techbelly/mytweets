@@ -7,7 +7,7 @@ http://github.com/simonw/mytweets/tree/master
 via
 http://github.com/blech/mytweets
 
-mytweets is a script to back up all your tweets to a local file.
+mytweets is a script to back up all your (and/or your friends') tweets to local files.
 It can save them in JSON or Python's pickle format.
 
 Notes:
@@ -46,14 +46,20 @@ Directions:
 
     FILE_PATH = '/path/to/the/file/we/will/create/'
 
-   or use the -f option on the command line.
+    or use the -f option on the command line.
+   
+7) Optionally add the TIMELINE argument which can have either 'user' (default) or 'friends', into config.py:
+
+    TIMELINE = 'friends'
+    
+    or user the -m option on the command line.
 
 7) Run the command like so:
 
-   ./fetch.py [-k your-consumer-key -s your-consumer-secret -o your-access-token -e your-access-token-secret -f /path/to/the/file/we/will/create/] [-t]
+   ./fetch.py [-k your-consumer-key -s your-consumer-secret -o your-access-token -e your-access-token-secret -f /path/to/the/file/we/will/create/ -m friends] [-t]
 
-8) The -t option will save your tweets to my_tweets.txt (pickle format).
-   Otherwise your tweets will be saved to my_tweets.json.
+9) The -f option will fetch your friends' tweets rather than your own, saving them to my_friends_tweets.txt or my_friends_tweets.json.
    
 9) Run the command again at any time to save any tweets created since
    you last ran the script.
+
