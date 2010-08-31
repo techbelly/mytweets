@@ -1,27 +1,28 @@
 #!/usr/bin/python
+import oauth2 as oauth
 import warnings
 warnings.simplefilter('ignore', DeprecationWarning)
 """
 Saves your tweets to a local file
 """
 
-import urllib, time, sys, re
+import httplib2, urllib, time, sys, re
 try:
     import json
 except ImportError:
     import simplejson as json
 
-from config import USERNAME, PASSWORD, FILE_PATH
 
-def load_all():
-  if '-u' in sys.argv and '-p' in sys.argv:
-    USERNAME=sys.argv[sys.argv.index('-u')+1]
-    PASSWORD=sys.argv[sys.argv.index('-p')+1]
-  else:
+if '-k' in sys.argv and '-s' in sys.argv and '-o' in sys.argv and '-e' in sys.argv:
+    CONSUMER_KEY = sys.argv[sys.argv.index('-k')+1]
+    CONSUMER_SECRET = sys.argv[sys.argv.index('-s')+1]
+    ACCESS_TOKEN = sys.argv[sys.argv.index('-o')+1]
+    ACCESS_TOKEN_SECRET = sys.argv[sys.argv.index('-e')+1]
+else:
     try:
-        from config import USERNAME, PASSWORD
+        from config import CONSUMER_KEY, CONSUMER_SECRET, ACCESS_TOKEN, ACCESS_TOKEN_SECRET
     except ImportError:
-        print "Username and password not specified. Create a config.py file or use the -u and -p command line options"
+        print "Keys and tokens not specified. Create a config.py file or use the -k, -s, -o and -e command line options"
         sys.exit(1)
          
 if '-t' in sys.argv:
@@ -59,8 +60,7 @@ else:
     
 FILE = FILE_PATH + FILE
 
-USER_TIMELINE = "http://%s:%s@twitter.com/statuses/user_timeline.json" % (
-    urllib.quote(USERNAME), urllib.quote(PASSWORD))
+USER_TIMELINE = "http://twitter.com/statuses/user_timeline.json"
     
 
 def normalize_url(url):
@@ -73,40 +73,40 @@ def normalize_url(url):
 
     return url
 
-# def lookup_short_urls(tweet):
-#     # If short_urls are already there, skip
-#     if 'short_urls' in tweet: return
-# 
-#     # (Start of line or word)
-#     # (Maybe something like http://)
-#     # (A vaguely domain-like section, at least one dot which is not a double dot)
-#     # (Whatever else follows, liberally via non-whitespace)
-#     url_regex = '(\A|\\b)([\w-]+://)?\S+[.][^\s.]\S*'
-# 
-#     redir = httplib2.Http(timeout=10)
-#     redir.follow_redirects = False
-#     redir.force_exception_to_status_code = True
-# 
-#     short_urls = {}
-# 
-#     new_text = tweet['text']
-#     for sub in tweet['text'].split():
-#         orig_url_match = re.search(url_regex, sub)
-#         if not orig_url_match:
-#             continue
-#         orig_url = normalize_url(orig_url_match.group(0))
-#         if not orig_url: continue
-# 
-#         try:
-#             response = redir.request(orig_url)[0]
-#             if 'status' in response and response['status'] == '301':
-#                 short_urls[response['location']] = orig_url
-#                 new_text = new_text.replace(orig_url, response['location'])
-#         except:
-#             pass
-# 
-#     tweet['short_urls'] = short_urls
-#     tweet['text'] = new_text
+def lookup_short_urls(tweet):
+    # If short_urls are already there, skip
+    if 'short_urls' in tweet: return
+
+    # (Start of line or word)
+    # (Maybe something like http://)
+    # (A vaguely domain-like section, at least one dot which is not a double dot)
+    # (Whatever else follows, liberally via non-whitespace)
+    url_regex = '(\A|\\b)([\w-]+://)?\S+[.][^\s.]\S*'
+
+    redir = httplib2.Http(timeout=10)
+    redir.follow_redirects = False
+    redir.force_exception_to_status_code = True
+
+    short_urls = {}
+
+    new_text = tweet['text']
+    for sub in tweet['text'].split():
+        orig_url_match = re.search(url_regex, sub)
+        if not orig_url_match:
+            continue
+        orig_url = normalize_url(orig_url_match.group(0))
+        if not orig_url: continue
+
+        try:
+            response = redir.request(orig_url)[0]
+            if 'status' in response and response['status'] == '301':
+                short_urls[response['location']] = orig_url
+                new_text = new_text.replace(orig_url, response['location'])
+        except:
+            pass
+
+    tweet['short_urls'] = short_urls
+    tweet['text'] = new_text
 
 def fetch_and_save_new_tweets():
     tweets=load_all()
@@ -117,8 +117,8 @@ def fetch_and_save_new_tweets():
         since_id = None
     try:
         new_tweets = fetch_all(since_id)
-    except ValueError:
-        print "An error occurred while getting your tweets. Check your that your username and password are correct."
+    except ValueError as (msg):
+        print "An error occurred while getting your tweets: ", msg
         sys.exit(1)
     num_new_saved = 0
     for tweet in new_tweets:
@@ -130,7 +130,7 @@ def fetch_and_save_new_tweets():
     for t in tweets:
         if 'user' in t:
             del t['user']
-        # lookup_short_urls(t)
+        lookup_short_urls(t)
     # Save back to disk
     write_all(tweets)
     print "Saved %s new tweets" % num_new_saved
@@ -147,11 +147,18 @@ def fetch_all(since_id = None):
 
     while True:
         args['page'] = page
-        body = urllib.urlopen("%s?%s" % (USER_TIMELINE, urllib.urlencode(args))).read()
+        
+        # Via http://blog.yjl.im/2010/04/first-step-to-twitter-oauth-streaming.html
+        consumer = oauth.Consumer(key=CONSUMER_KEY, secret=CONSUMER_SECRET)
+        token = oauth.Token(key=ACCESS_TOKEN, secret=ACCESS_TOKEN_SECRET)
+        client = oauth.Client(consumer, token)
+
+        resp, content = client.request("%s?%s" % (USER_TIMELINE, urllib.urlencode(args)), 'GET')
+
         page += 1
-        tweets = json.loads(body)
+        tweets = json.loads(content)
         if 'error' in tweets:
-            raise ValueError, tweets
+            raise ValueError, tweets['error']
         if not tweets:
             break
         for tweet in tweets:

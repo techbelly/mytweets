@@ -10,29 +10,50 @@ http://github.com/blech/mytweets
 mytweets is a script to back up all your tweets to a local file.
 It can save them in JSON or Python's pickle format.
 
+Notes:
+1) mytweets requires python-oauth2 from http://github.com/simplegeo/python-oauth2
+2) python-oauth2 in turn requires httplib2 from http://code.google.com/p/httplib2/
+3) mytweets requires simplejson (unless Python 2.6) from http://pypi.python.org/pypi/simplejson/
+
+
 Directions:
 1) Put fetch.py in any directory
+
 2) Run 'chmod +x fetch.py'
 
-Notes:
-1) mytweets requires simplejson (unless Python 2.6) from http://pypi.python.org/pypi/simplejson/
+3) Create a file called config.py in the same directory as the fetchy.py script.
 
-Usage
-1) To specify your username and passowrd, you can either
-   create a file called config.py in the same directory as the script:
+4) Set up your Twitter account with a new app:
+    a) Go to http://dev.twitter.com/ and log in with your Twitter account.
+    b) Click 'Register an app' (or 'Your apps' and then 'Register a new app').
+    c) Fill out the form.
+        * Set 'Application Name' (it won't be publicly visible unless you also use this app to post tweets).
+        * Set 'Application website' (it's required).
+        * Set 'Application Type' to 'Client'.
+        * Set 'Default access type' to 'Read-only' (unless you're going to post tweets using this app).
+        * The other fields can be left blank if you like.
 
-    USERNAME = 'your-twitter-username'
-    PASSWORD = 'your-twitter-password'
+5) From the next page copy and paste the 'Consumer key' and 'Consumer secret' into config.py. Then click the 'My Access Token' link on the right of the page and copy the 'Access Token (oauth_token)' and 'Access Token Secret (oauth_token_secret)' into config.py, eg:
+
+    CONSUMER_KEY = 'Esdfy8iSDF89vdaDFSa789'
+    CONSUMER_SECRET = 'DFYUK89fddsfadFDDFS789vsdCXUdfs789xcvDSFH'
+    ACCESS_TOKEN = '74382-89FDSHJKjkdsfsfFDSY89SFDFES8978dfsfsda78fdl'
+    ACCESS_TOKEN_SECRET = '0dfsYFDSs789SDF7uyfdshjksdf789SFSDFHJKSDF'
+    
+    or use the -k, -s, -o, -e options on the command line.
+
+6) Add the FILE_PATH to where you want the resulting file of tweets to be saved, into config.py: 
+
     FILE_PATH = '/path/to/the/file/we/will/create/'
 
-   or use the -u, -p and -f options on the command line.
+   or use the -f option on the command line.
 
-2) Run the command like so:
+7) Run the command like so:
 
-   ./fetch.py [-u your-twitter-username -p your-twitter-password -f /path/to/the/file/we/will/create/] [-t]
+   ./fetch.py [-k your-consumer-key -s your-consumer-secret -o your-access-token -e your-access-token-secret -f /path/to/the/file/we/will/create/] [-t]
 
-3) The -t option will save your tweets to my_tweets.txt (pickle format).
+8) The -t option will save your tweets to my_tweets.txt (pickle format).
    Otherwise your tweets will be saved to my_tweets.json.
    
-4) Run the command again at any time to save any tweets created since
+9) Run the command again at any time to save any tweets created since
    you last ran the script.
