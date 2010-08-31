@@ -13,10 +13,6 @@ except ImportError:
 
 from config import USERNAME, PASSWORD, FILE_PATH
 
-FILE = FILE_PATH + "my_tweets.json"
-USER_TIMELINE = "http://%s:%s@twitter.com/statuses/user_timeline.json" % (
-    urllib.quote(USERNAME), urllib.quote(PASSWORD))
-
 def load_all():
   if '-u' in sys.argv and '-p' in sys.argv:
     USERNAME=sys.argv[sys.argv.index('-u')+1]
@@ -52,8 +48,20 @@ else:
     def write_all(tweets):
         json.dump(tweets, open(FILE, 'w'), indent = 2)
 
+if '-f' in sys.argv:
+    FILE_PATH = sys.argv[sys.argv.index('-f')+1]
+else:
+    try:
+        from config import FILE_PATH
+    except ImportError:
+        print "File_path not specified. Create a config.py file or use the -f command line options"
+        sys.exit(1)
+    
+FILE = FILE_PATH + FILE
+
 USER_TIMELINE = "http://%s:%s@twitter.com/statuses/user_timeline.json" % (
     urllib.quote(USERNAME), urllib.quote(PASSWORD))
+    
 
 def normalize_url(url):
     # Simple length heuristic
