@@ -176,12 +176,18 @@ def fetch_all(since_id = None):
 
     while True:
         args['page'] = page
-        
+
         # Via http://blog.yjl.im/2010/04/first-step-to-twitter-oauth-streaming.html
         consumer = oauth.Consumer(key=CONSUMER_KEY, secret=CONSUMER_SECRET)
         token = oauth.Token(key=ACCESS_TOKEN, secret=ACCESS_TOKEN_SECRET)
         client = oauth.Client(consumer, token)
         resp, content = client.request("%s?%s" % (REMOTE_TIMELINE, urllib.urlencode(args)), 'GET')
+
+        if resp['status'] == '502':
+            # This usually seems to mean the request has timed out, but if we try again
+            # the result has been cached and will work second time round.
+            time.sleep(2)
+            resp, content = client.request("%s?%s" % (REMOTE_TIMELINE, urllib.urlencode(args)), 'GET')
 
         page += 1
         tweets = json.loads(content)

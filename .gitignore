@@ -1,3 +1,4 @@
 my_tweets.*
+my_friends_tweets.*
 *.pyc
 config.py

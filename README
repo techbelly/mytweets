@@ -73,6 +73,9 @@ Directions:
    -o your-access-token -e your-access-token-secret 
    -f /path/to/the/file/we/will/create/ -m friends] [-t]
    
+   It can take a long time to run first time round as later pages of 
+   results can take a long time to be returned from Twitter.
+   
 9) Run the command again at any time to save any tweets created since you 
    last ran the script.
 
