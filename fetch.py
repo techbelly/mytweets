@@ -155,9 +155,9 @@ def fetch_and_save_new_tweets():
             tweets.append(tweet)
             num_new_saved += 1
     tweets.sort(key = lambda t: t['id'], reverse=True)
-    # Delete the 'user' key, lookup short URLs
+    # Delete the 'user' key (unless this is the friends' timeline), lookup short URLs
     for t in tweets:
-        if 'user' in t:
+        if TIMELINE == 'user' and 'user' in t:
             del t['user']
         lookup_short_urls(t)
     # Save back to disk
