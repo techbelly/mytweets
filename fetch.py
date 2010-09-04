@@ -146,7 +146,7 @@ def fetch_and_save_new_tweets():
         since_id = None
     try:
         new_tweets = fetch_all(since_id)
-    except ValueError as (msg):
+    except ValueError, msg:
         print "An error occurred while getting your tweets: ", msg
         sys.exit(1)
     num_new_saved = 0
