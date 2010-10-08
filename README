@@ -1,24 +1,24 @@
 mytweets
-Forked by Phil Gyford
-phil@gyford.com
+Forked by Ben Griffiths
 
-This is a fork of simonw's original mytweets script: 
+This is a fork of philgyford's original mytweets script: 
+http://github.com/philgyford/mytweets
+Which is is a fork of simonw's original mytweets script: 
 http://github.com/simonw/mytweets/tree/master
 via
 http://github.com/blech/mytweets
 
-mytweets is a script to back up all your (and/or your friends') tweets to 
+mytweets is a script to back up all your and your friends' tweets to 
 local files.
-It can save them in JSON or Python's pickle format.
+
+It saves them as CSV.
 
 Notes:
 1) mytweets requires python-oauth2 from 
    http://github.com/simplegeo/python-oauth2
 2) python-oauth2 in turn requires httplib2 from  
    http://code.google.com/p/httplib2/
-3) mytweets requires simplejson (unless Python 2.6) from 
-   http://pypi.python.org/pypi/simplejson/
-
+3) mytweets requires Python 2.6
 
 Directions:
 1) Put fetch.py in any directory
@@ -51,27 +51,16 @@ Directions:
     ACCESS_TOKEN = '74382-89FDSHJKjkdsfsfFDSY89SFDFES8978dfsfsda78fdl'
     ACCESS_TOKEN_SECRET = '0dfsYFDSs789SDF7uyfdshjksdf789SFSDFHJKSDF'
     
-    or use the -k, -s, -o, -e options on the command line.
-
 6) Add the FILE_PATH to where you want the resulting file of tweets to be 
    saved, into config.py: 
 
-    FILE_PATH = '/path/to/the/file/we/will/create/'
+    FILE_PATH = '/path/to/the/file/we/will/create'
 
     or use the -f option on the command line.
    
-7) Optionally add the TIMELINE argument which can have either 'user'  
-   (default) or 'friends', into config.py:
-
-    TIMELINE = 'friends'
-    
-    or use the -m option on the command line.
-
 8) Run the command like so:
 
-   ./fetch.py [-k your-consumer-key -s your-consumer-secret 
-   -o your-access-token -e your-access-token-secret 
-   -f /path/to/the/file/we/will/create/ -m friends] [-t]
+   ./fetch.py [-f /path/to/the/file/we/will/create/]
    
    It can take a long time to run first time round as later pages of 
    results can take a long time to be returned from Twitter.

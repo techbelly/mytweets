@@ -1,211 +1,171 @@
-#!/usr/bin/python
+#!/usr/bin/env python2.6
+
 import oauth2 as oauth
-import warnings
-warnings.simplefilter('ignore', DeprecationWarning)
-"""
-Saves your tweets to a local file
-"""
+import httplib2, urllib, time, sys, re, csv, os, json
+import codecs, cStringIO
 
-import httplib2, urllib, time, sys, re
-try:
-    import json
-except ImportError:
-    import simplejson as json
+### Unicode palaver from http://docs.python.org/library/csv.html#csv-examples
+class UnicodeWriter:
+    """
+    A CSV writer which will write rows to CSV file "f",
+    which is encoded in the given encoding.
+    """
 
+    def __init__(self, f, dialect=csv.excel, encoding="utf-8", **kwds):
+        # Redirect output to a queue
+        self.queue = cStringIO.StringIO()
+        self.writer = csv.writer(self.queue, dialect=dialect, **kwds)
+        self.stream = f
+        self.encoder = codecs.getincrementalencoder(encoding)()
 
-# Valid options for TIMELINE or -m, and the corresponding endpoints at twitter.com/statuses/ and the local filenames we use.
-timelines = {
-    'user': {
-        'remote': 'user_timeline',
-        'local': 'my_tweets'
-    },
-    'friends': {
-        'remote': 'friends_timeline',
-        'local': 'my_friends_tweets'
-    }
-}
+    def writerow(self, row):
+        self.writer.writerow([unicode(s).encode("utf-8") for s in row])
+        # Fetch UTF-8 output from the queue ...
+        data = self.queue.getvalue()
+        data = data.decode("utf-8")
+        # ... and reencode it into the target encoding
+        data = self.encoder.encode(data)
+        # write to the target stream
+        self.stream.write(data)
+        # empty queue
+        self.queue.truncate(0)
 
+    def writerows(self, rows):
+        for row in rows:
+            self.writerow(row)
 
-if '-k' in sys.argv and '-s' in sys.argv and '-o' in sys.argv and '-e' in sys.argv:
-    CONSUMER_KEY = sys.argv[sys.argv.index('-k')+1]
-    CONSUMER_SECRET = sys.argv[sys.argv.index('-s')+1]
-    ACCESS_TOKEN = sys.argv[sys.argv.index('-o')+1]
-    ACCESS_TOKEN_SECRET = sys.argv[sys.argv.index('-e')+1]
-else:
-    try:
-        from config import CONSUMER_KEY, CONSUMER_SECRET, ACCESS_TOKEN, ACCESS_TOKEN_SECRET
-    except ImportError:
-        print "Keys and tokens not specified. Create a config.py file or use the -k, -s, -o and -e command line options"
-        sys.exit(1)
+def retrieve(method,args):
+    url = "http://twitter.com/statuses/%s.json" % method
+    consumer = oauth.Consumer(key=CONSUMER_KEY, secret=CONSUMER_SECRET)
+    token = oauth.Token(key=ACCESS_TOKEN, secret=ACCESS_TOKEN_SECRET)
+    client = oauth.Client(consumer, token)
+    resp, content =  client.request("%s?%s" % (url, urllib.urlencode(args)), 'GET')
+    if resp['status'] == '502':
+        time.sleep(2)
+        resp, content =  client.request("%s?%s" % (url, urllib.urlencode(args)), 'GET')
+    return content
 
+def pages_of_tweets(method,since_id):
+    args = {'count': 200,'page': 0}
+    if since_id is not None:
+        args['since_id'] = since_id
+    while True:
+        content = retrieve(method, args)
+        tweets = json.loads(content)
+        if not tweets:
+            break
+        if 'error' in tweets:
+            raise ValueError, tweets['error']
+        yield tweets
+        args['page'] += 1
 
-# Work out whether we're doing user_timeline or friends_timeline.
-TIMELINE = 'user'
-if '-m' in sys.argv:
-    TIMELINE = sys.argv[sys.argv.index('-m')+1]
-else:
-    try:
-        from config import TIMELINE
-    except ImportError:
-        pass
-try:
-    REMOTE_TIMELINE = "http://twitter.com/statuses/%s.json" % timelines[TIMELINE]['remote']
-except KeyError:
-    print "Invalid timeline: ", TIMELINE
-    sys.exit(1)
-FILE = timelines[TIMELINE]['local']
+def concatenated(lists):
+    for l in lists:
+        for item in l:
+            yield item
 
+def unique(items):
+    seen_ids = set()
+    for item in items:
+        if item['id'] not in seen_ids:
+            seen_ids.add(item['id'])
+            yield item
 
-if '-t' in sys.argv:
-    FILE = "%s.txt" % FILE
-    import pickle
-    
-    def load_all():
-        try:
-            return pickle.load(open(FILE))
-        except IOError:
-            return []
-    
-    def write_all(tweets):
-        pickle.dump(tweets, open(FILE, 'w'))
-else:
-    FILE = "%s.json" % FILE
-    
-    def load_all():
-        try:
-            return json.load(open(FILE))
-        except IOError:
-            return []
-    
-    def write_all(tweets):
-        json.dump(tweets, open(FILE, 'w'), indent = 2)
+def sorted_by_id(items):
+    return sorted(items,key=lambda t: t['id'])
 
-if '-f' in sys.argv:
-    FILE_PATH = sys.argv[sys.argv.index('-f')+1]
-else:
-    try:
-        from config import FILE_PATH
-    except ImportError:
-        print "File_path not specified. Create a config.py file or use the -f command line options"
-        sys.exit(1)
-    
-FILE = FILE_PATH + FILE
-    
+def normalize(item):
+    if not re.search('://', item):
+        return 'http://' + item
+    else:
+        return item
 
-def normalize_url(url):
-    # Simple length heuristic
-    if len(url) < 10: return None
-
-    # Make sure we have some sort of protocol
-    if not re.search('://', url):
-        url = 'http://' + url
-
-    return url
-
-def lookup_short_urls(tweet):
-    # If short_urls are already there, skip
-    if 'short_urls' in tweet: return
-
-    # (Start of line or word)
-    # (Maybe something like http://)
-    # (A vaguely domain-like section, at least one dot which is not a double dot)
-    # (Whatever else follows, liberally via non-whitespace)
-    url_regex = '(\A|\\b)([\w-]+://)?\S+[.][^\s.]\S*'
-
+def dereference(url):
     redir = httplib2.Http(timeout=10)
     redir.follow_redirects = False
     redir.force_exception_to_status_code = True
+    response = redir.request(normalize(url))[0]
+    if 'status' in response and response['status'] == '301':
+        return unicode(response['location'])
+    else:
+        return url
 
-    short_urls = {}
-
-    new_text = tweet['text']
-    for sub in tweet['text'].split():
-        orig_url_match = re.search(url_regex, sub)
-        if not orig_url_match:
-            continue
-        orig_url = normalize_url(orig_url_match.group(0))
-        if not orig_url: continue
-
+def with_urls_expanded(items):
+    for tweet in items:
         try:
-            response = redir.request(orig_url)[0]
-            if 'status' in response and response['status'] == '301':
-                short_urls[response['location']] = orig_url
-                new_text = new_text.replace(orig_url, response['location'])
+            url_regex = '(\A|\\b)([\w-]+://)?\S+[.][^\s.]\S*'
+            url_matches = (re.search(url_regex,word) for word in tweet['text'].split())
+            potential_urls = (match.group(0) for match in url_matches if match is not None)
+            for url in potential_urls:
+                lengthened = dereference(url)
+                if not lengthened == url:
+                    tweet['text'] = tweet['text'].replace(url,lengthened)
         except:
             pass
+        yield tweet
 
-    tweet['short_urls'] = short_urls
-    tweet['text'] = new_text
+def new_tweets(method,since_id):
+    tweets = concatenated(pages_of_tweets(method,since_id))
+    tweets = unique(tweets)
+    tweets = with_urls_expanded(tweets)
+    tweets = sorted_by_id(tweets)
+    return tweets
+    
+def csv_fields(tweets):
+    for tweet in tweets:
+        yield [tweet["id"],
+               tweet["user"]["screen_name"],
+               tweet["user"]["id"],
+               tweet["text"],
+               tweet['created_at'],
+               tweet["in_reply_to_status_id"],
+               tweet["in_reply_to_user_id"],
+               tweet["in_reply_to_screen_name"]]
 
-def fetch_and_save_new_tweets():
-    tweets=load_all()
-    old_tweet_ids = set(t['id'] for t in tweets)
-    if tweets:
-        since_id = max(t['id'] for t in tweets)
+def update_csv(method,filename):
+    if os.path.isfile(filename):
+        since_id = max_status(filename)
     else:
         since_id = None
-    try:
-        new_tweets = fetch_all(since_id)
-    except ValueError, msg:
-        print "An error occurred while getting your tweets: ", msg
-        sys.exit(1)
-    num_new_saved = 0
-    for tweet in new_tweets:
-        if tweet['id'] not in old_tweet_ids:
-            tweets.append(tweet)
-            num_new_saved += 1
-    tweets.sort(key = lambda t: t['id'], reverse=True)
-    # Delete the 'user' key (unless this is the friends' timeline), lookup short URLs
-    for t in tweets:
-        if TIMELINE == 'user' and 'user' in t:
-            del t['user']
-        lookup_short_urls(t)
-    # Save back to disk
-    write_all(tweets)
-    print "Saved %s new tweets" % num_new_saved
+    write_csv(method,filename,since_id)
+    
+def write_csv(method,filename,since_id):
+    file = open(filename,'ab')
+    writer = UnicodeWriter(file)
+    count = 0
+    for tweet in csv_fields(new_tweets(method,since_id)):
+        writer.writerow(tweet)
+        count += 1
+    file.close()
+    print "%d tweets added to %s" % (count,filename)
 
-def fetch_all(since_id = None):
-    all_tweets = []
-    seen_ids = set()
-    page = 0
-    args = {'count': 200}
-    if since_id is not None:
-        args['since_id'] = since_id
-
-    all_tweets_len = len(all_tweets)
-
-    while True:
-        args['page'] = page
-
-        # Via http://blog.yjl.im/2010/04/first-step-to-twitter-oauth-streaming.html
-        consumer = oauth.Consumer(key=CONSUMER_KEY, secret=CONSUMER_SECRET)
-        token = oauth.Token(key=ACCESS_TOKEN, secret=ACCESS_TOKEN_SECRET)
-        client = oauth.Client(consumer, token)
-        resp, content = client.request("%s?%s" % (REMOTE_TIMELINE, urllib.urlencode(args)), 'GET')
-
-        if resp['status'] == '502':
-            # This usually seems to mean the request has timed out, but if we try again
-            # the result has been cached and will work second time round.
-            time.sleep(2)
-            resp, content = client.request("%s?%s" % (REMOTE_TIMELINE, urllib.urlencode(args)), 'GET')
-
-        page += 1
-        tweets = json.loads(content)
-        if 'error' in tweets:
-            raise ValueError, tweets['error']
-        if not tweets:
-            break
-        for tweet in tweets:
-            if tweet['id'] not in seen_ids:
-                seen_ids.add(tweet['id'])
-                all_tweets.append(tweet)
-        all_tweets_len = len(all_tweets)
-        time.sleep(2)
-
-    all_tweets.sort(key = lambda t: t['id'], reverse=True)
-    return all_tweets
-
+def max_status(filename):
+    ids = [line.split(',')[0] for line in open(filename) if line]
+    if ids:
+        return max(int(id) for id in ids if id.isdigit())
+    else:
+        return None
 
 
 if __name__ == '__main__':
-    fetch_and_save_new_tweets()
+    
+    try:
+        from config import CONSUMER_KEY, CONSUMER_SECRET, ACCESS_TOKEN, ACCESS_TOKEN_SECRET
+    except ImportError:
+        print "Keys and tokens not specified. Create a config.py file."
+        sys.exit(1)
+    
+    if '-f' in sys.argv:
+        FILE_PATH = sys.argv[sys.argv.index('-f')+1]
+    else:
+        try:
+            from config import FILE_PATH
+        except ImportError:
+            print "File_path not specified. Create a config.py file. Or use -f on the command line. Cheerio"
+            sys.exit(1)
+        
+    update_csv("user_timeline","%s/my_tweets.csv" % FILE_PATH)
+    update_csv("home_timeline","%s/my_friends.csv" % FILE_PATH)
+   
+
+
