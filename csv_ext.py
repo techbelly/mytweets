@@ -1,6 +1,7 @@
 ### Unicode palaver from http://docs.python.org/library/csv.html#csv-examples
 import codecs
 import cStringIO
+import csv
 
 class UnicodeWriter:
     """
