@@ -96,6 +96,10 @@ def csv_fields(tweets):
                tweet["in_reply_to_user_id"],
                tweet["in_reply_to_screen_name"]]
 
+def report(string):
+    if sys.stdout.isatty():
+        print string
+
 def write_csv(tweets, filename):
     file = open(filename, 'ab')
     writer = UnicodeWriter(file)
@@ -104,7 +108,7 @@ def write_csv(tweets, filename):
         writer.writerow(tweet)
         count += 1
     file.close()
-    print "%d tweets added to %s" % (count, filename)
+    report("%d tweets added to %s" % (count, filename))
 
 def max_status(filename):
     ids = [line.split(',')[0] for line in open(filename) if line]
