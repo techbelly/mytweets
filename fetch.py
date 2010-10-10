@@ -2,6 +2,7 @@
 import oauth2 as oauth
 import httplib2, urllib, time, sys, re, os, json
 from csv_ext import UnicodeWriter
+import urllib2
 
 def retrieve(method, args):
     url = "http://twitter.com/statuses/%s.json" % method
@@ -126,6 +127,13 @@ def update_csv(method, filename):
     write_csv(tweets,filename)
 
 if __name__ == '__main__':
+
+    try:
+        response=urllib2.urlopen('http://google.com',timeout=1)
+    except urllib2.URLError as err:
+        print "No network connection. Giving up"
+        sys.exit(1)
+
     try:
         from config import CONSUMER_KEY, CONSUMER_SECRET, ACCESS_TOKEN, ACCESS_TOKEN_SECRET
     except ImportError:
