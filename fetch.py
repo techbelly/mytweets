@@ -96,18 +96,11 @@ def csv_fields(tweets):
                tweet["in_reply_to_user_id"],
                tweet["in_reply_to_screen_name"]]
 
-def update_csv(method, filename):
-    if os.path.isfile(filename):
-        since_id = max_status(filename)
-    else:
-        since_id = None
-    write_csv(method, filename, since_id)
-
-def write_csv(method, filename, since_id):
+def write_csv(tweets, filename):
     file = open(filename, 'ab')
     writer = UnicodeWriter(file)
     count = 0
-    for tweet in csv_fields(new_tweets(method, since_id)):
+    for tweet in csv_fields(tweets):
         writer.writerow(tweet)
         count += 1
     file.close()
@@ -120,6 +113,13 @@ def max_status(filename):
     else:
         return None
 
+def update_csv(method, filename):
+    if os.path.isfile(filename):
+        since_id = max_status(filename)
+    else:
+        since_id = None
+    tweets = new_tweets(method,since_id)
+    write_csv(tweets,filename)
 
 if __name__ == '__main__':
     try:
