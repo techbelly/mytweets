@@ -47,7 +47,7 @@ def refile(name):
 
     files = sorted(matching(os.listdir(FILE_PATH),name+'-'),reverse=True)
     if files[0]:
-        os.rename(files[0], in_file_name)
+        os.rename("%s/%s" % (FILE_PATH,files[0]), in_file_name)
 
 
 if __name__ == '__main__':
