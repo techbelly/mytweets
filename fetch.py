@@ -1,7 +1,7 @@
 #!/usr/bin/env python2.6
 import oauth2 as oauth
 import httplib2, urllib, time, sys, re, os, json
-from csv_ext import UnicodeWriter
+from csv_ext import UnicodeWriter, UnicodeReader
 import urllib2
 
 def get(url,args,retries=1):
@@ -110,15 +110,14 @@ def write_csv(tweets, filename):
     file.close()
     report("%d tweets added to %s" % (count, filename))
 
-def max_status(filename):
-    non_blank  = (line for line in open(filename) if line)
-    id_columns = (line.split(',')[0] for line in non_blank)
-    ids        = (int(i) for i in id_columns if i.isdigit())
-    return max(ids)
+def last_tweet_id(filename):
+    fields  =  UnicodeReader(open(filename))
+    ids     =  (int(field[0]) for field in fields)
+    return reduce(max,ids,None)
 
 def update_csv(method, filename):
     if os.path.isfile(filename):
-        since_id = max_status(filename)
+        since_id = last_tweet_id(filename)
     else:
         since_id = None
     tweets = new_tweets(method,since_id)
