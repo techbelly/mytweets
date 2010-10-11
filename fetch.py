@@ -100,7 +100,7 @@ def report(string):
     if sys.stdout.isatty():
         print string
 
-def write_csv(tweets, filename):
+def append_csv(tweets, filename):
     file = open(filename, 'ab')
     writer = UnicodeWriter(file)
     count = 0
@@ -121,7 +121,7 @@ def update_csv(method, filename):
     else:
         since_id = None
     tweets = new_tweets(method,since_id)
-    write_csv(tweets,filename)
+    append_csv(tweets,filename)
 
 if __name__ == '__main__':
 
