@@ -4,27 +4,27 @@ import httplib2, urllib, time, sys, re, os, json
 from csv_ext import UnicodeWriter
 import urllib2
 
-def retrieve(method, args):
-    url = "http://twitter.com/statuses/%s.json" % method
+def get(url,args,retries=1):
     consumer = oauth.Consumer(key=CONSUMER_KEY, secret=CONSUMER_SECRET)
     token = oauth.Token(key=ACCESS_TOKEN, secret=ACCESS_TOKEN_SECRET)
     client = oauth.Client(consumer, token)
-
-    def make_request():
-        return client.request("%s?%s" % (url, urllib.urlencode(args)), 'GET')
-
-    resp, content = make_request()
-    if resp['status'] == '502':
-        time.sleep(2)
-        resp, content = make_request()
-    return content
+    
+    for i in range(retries+1):
+        resp, content = client.request("%s?%s" % (url, urllib.urlencode(args)), 'GET')
+        if resp['status'] == '502':
+            time.sleep(2)
+        else:
+            return content
+        
+    return "[]"
 
 def pages_of_tweets(method, since_id):
+    url = "http://twitter.com/statuses/%s.json" % method
     args = {'count': 200, 'page': 0}
     if since_id is not None:
         args['since_id'] = since_id
     while True:
-        content = retrieve(method, args)
+        content = get(url, args)
         tweets = json.loads(content)
         if not tweets:
             break
@@ -68,8 +68,7 @@ def with_urls_expanded(items):
     for tweet in items:
         try:
             url_regex = '(\A|\\b)([\w-]+://)?\S+[.][^\s.]\S*'
-            url_matches = (re.search(url_regex,
-                                     word) for word in tweet['text'].split())
+            url_matches = (re.search(url_regex,word) for word in tweet['text'].split())
             potential_urls = (match.group(0) for match in url_matches if match is not None)
             for url in potential_urls:
                 lengthened = dereference(url)
@@ -112,11 +111,10 @@ def write_csv(tweets, filename):
     report("%d tweets added to %s" % (count, filename))
 
 def max_status(filename):
-    ids = [line.split(',')[0] for line in open(filename) if line]
-    if ids:
-        return max(int(id) for id in ids if id.isdigit())
-    else:
-        return None
+    non_blank  = (line for line in open(filename) if line)
+    id_columns = (line.split(',')[0] for line in non_blank)
+    ids        = (int(i) for i in id_columns if i.isdigit())
+    return max(ids)
 
 def update_csv(method, filename):
     if os.path.isfile(filename):

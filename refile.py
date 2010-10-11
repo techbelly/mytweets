@@ -31,7 +31,7 @@ def refile(name):
         date_field = line[4]
         date = datetime.strptime(date_field,'%a %b %d %H:%M:%S +0000 %Y')
         file_name = "%s/%s-%d-%02d.csv" % (FILE_PATH,name,date.year, date.month)
-        if open_files.has_key(file_name):
+        if file_name in open_files:
             _,writer = open_files[file_name]
         else:
             file = open(file_name,'ab')
