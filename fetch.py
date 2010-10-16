@@ -3,6 +3,7 @@ import oauth2 as oauth
 import httplib2, urllib, time, sys, re, os, json
 from csv_ext import UnicodeWriter, UnicodeReader
 import urllib2
+from itertools import chain
 
 def get(url,args,retries=1):
     consumer = oauth.Consumer(key=CONSUMER_KEY, secret=CONSUMER_SECRET)
@@ -34,9 +35,7 @@ def pages_of_tweets(method, since_id):
         args['page'] += 1
 
 def concatenated(lists):
-    for l in lists:
-        for item in l:
-            yield item
+    return chain.from_iterable(lists)
 
 def unique(items):
     seen_ids = set()
